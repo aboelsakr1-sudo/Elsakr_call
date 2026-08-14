@@ -77,8 +77,13 @@ io.on('connection', (socket) => {
 
   socket.on('send-chat-msg', ({ targetSocketId, message }) => {
     const sender = connectedUsers[socket.id];
+    const senderName = sender ? sender.username : 'مجهول';
+
+    // 👈 طباعة الرسالة مباشرة في التيرمينال ليقرأها السيرفر
+    console.log(`💬 [رسالة شات] من ${senderName}: ${message}`);
+
     io.to(targetSocketId).emit('receive-chat-msg', {
-      senderName: sender ? sender.username : 'مجهول',
+      senderName: senderName,
       message
     });
   });
