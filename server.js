@@ -1,54 +1,71 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-
-// السماح بتقديم الملفات الثابتة
-app.use(express.static(__dirname));
-
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+const io = new Server(server, {
+  cors: { origin: "*" }
 });
+
+app.use(express.static(path.join(__dirname)));
+
+// تخزين المستخدمين المتصلين: socket.id -> { username, room }
+const users = {};
 
 io.on('connection', (socket) => {
-    console.log('مستخدم متصل:', socket.id);
-    
-    // إبلاغ الجميع بالاتصال
-    socket.broadcast.emit('user-connected', socket.id);
+  console.log('مستخدم جديد اتصل:', socket.id);
 
-    // استقبال وإعادة إرسال رسائل الدردشة
-    socket.on('chat message', (msg) => {
-        io.emit('chat message', { sender: socket.id, text: msg });
-    });
+  // 1. تسجيل اسم المستخدم وانضمامه للغرفة
+  socket.on('join-room', ({ username, room }) => {
+    users[socket.id] = { username, room };
+    socket.join(room);
 
-    // إشارات مكالمة الفيديو (WebRTC Signaling)
-    socket.on('offer', (data) => {
-        socket.broadcast.emit('offer', data);
-    });
+    // تحديث قائمة المستخدمين في هذه الغرفة
+    updateRoomUsers(room);
+  });
 
-    socket.on('answer', (data) => {
-        socket.broadcast.emit('answer', data);
+  // 2. إرسال طلب اتصال خاص لشخص معين (1-on-1)
+  socket.on('call-user', ({ targetSocketId, signalData }) => {
+    const caller = users[socket.id];
+    io.to(targetSocketId).emit('incoming-call', {
+      fromSocketId: socket.id,
+      callerName: caller ? caller.username : 'شخص ما',
+      signalData
     });
+  });
 
-    socket.on('ice-candidate', (data) => {
-        socket.broadcast.emit('ice-candidate', data);
-    });
+  // 3. قبول الاتصال المباشر
+  socket.on('accept-call', ({ targetSocketId, signalData }) => {
+    io.to(targetSocketId).emit('call-accepted', { signalData });
+  });
 
-    socket.on('hangup', () => {
-        socket.broadcast.emit('hangup');
-    });
+  // 4. رفض أو إنهاء المكالمة
+  socket.on('reject-call', ({ targetSocketId }) => {
+    io.to(targetSocketId).emit('call-rejected');
+  });
 
-    socket.on('disconnect', () => {
-        console.log('قطع الاتصال:', socket.id);
-        socket.broadcast.emit('user-disconnected', socket.id);
-    });
+  // عند انقطاع الاتصال
+  socket.on('disconnect', () => {
+    const user = users[socket.id];
+    if (user) {
+      const room = user.room;
+      delete users[socket.id];
+      updateRoomUsers(room);
+    }
+  });
+
+  function updateRoomUsers(room) {
+    const roomUsers = Object.entries(users)
+      .filter(([id, u]) => u.room === room)
+      .map(([id, u]) => ({ socketId: id, username: u.username }));
+
+    io.to(room).emit('room-users', roomUsers);
+  }
 });
-// التكيف مع المنفذ الذي تحدده المنصة أو استخدام 3000 كمحلي
-const PORT = process.env.PORT || 3000;
 
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`الخادم يعمل على المنفذ: ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
