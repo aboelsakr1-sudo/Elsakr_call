@@ -3,26 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>El Sakr Call</title>
-    <meta name="author"content="Fathi sakr">
+  <title>El Sakr Call - الصقر كول</title>
+  <meta name="author"content="Fathi sakr">
     <meta name="robots"content="index,follow">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: #0f172a; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .card { background: #1e293b; padding: 25px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
-    h2 { margin-bottom: 20px; color: #38bdf8; }
-    input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 16px; }
-    button { background: #0284c7; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #0369a1; }
+    body { background: #0a0e17; color: #e2e8f0; margin: 0; padding: 10px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: #161e2e; padding: 20px; border-radius: 16px; width: 100%; max-width: 600px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); text-align: center; border: 1px solid #1f293a; position: relative; }
+    h2 { margin-bottom: 20px; color: #38bdf8; font-size: 28px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+    input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #1f293a; background: #0f172a; color: #f1f5f9; font-size: 16px; transition: 0.2s; }
+    input:focus, select:focus { border-color: #38bdf8; outline: none; }
+    button { background: #0284c7; border: none; font-weight: bold; cursor: pointer; color: #fff; }
+    button:hover { background: #0369a1; transform: translateY(-1px); }
     .user-list { list-style: none; padding: 0; margin-top: 15px; text-align: right; }
-    .user-item { background: #334155; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .user-item { background: #1f293a; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2d3748; }
     .user-item button { width: auto; padding: 6px 15px; margin: 0; background: #10b981; }
     .video-container { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-    video { width: 100%; height: 200px; background: #000; border-radius: 12px; object-fit: cover; }
+    video { width: 100%; height: 200px; background: #000; border-radius: 12px; object-fit: cover; border: 2px solid #2d3748; }
     .hidden { display: none; }
-    .incoming-alert { background: #eab308; color: #000; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; }
-    .incoming-alert button { margin-top: 5px; }
+    .waiting-pulse { color: #94a3b8; animation: blink 1.5s infinite; font-size: 14px; }
+    @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+    /* قسم الألعاب المباشر المحدث */
+    .games-section { margin-top: 25px; border-top: 2px solid #1f293a; padding-top: 20px; background: #0f172a; border-radius: 12px; padding: 15px; }
+    .games-header { color: #a78bfa; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
+    .games-btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
+    .games-btn-group button { background: #7c3aed; width: auto; max-width: 160px; margin: 0; padding: 10px; font-size: 15px; }
+    .games-btn-group button:hover { background: #6d28d9; }
+    
+    /* حاوية اللعبة المباشرة */
+    .game-area { background: #1f293a; border-radius: 12px; padding: 15px; margin-top: 10px; border: 1px solid #334155; }
+    .xo-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 260px; margin: 0 auto; }
+    .xo-cell { background: #0f172a; border: 2px solid #38bdf8; height: 80px; border-radius: 8px; font-size: 36px; font-weight: bold; color: #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    .xo-cell:hover { background: #1e293b; }
+    
+    #snakeCanvas { background: #020617; border: 2px solid #38bdf8; border-radius: 8px; max-width: 100%; }
   </style>
 </head>
 <body>
@@ -32,7 +48,7 @@
 
   <!-- شاشة الدخول -->
   <div id="login-screen">
-    <input type="text" id="username" placeholder="أدخل اسمك (مثال: محمد)...">
+    <input type="text" id="username" placeholder="أدخل اسمك (مثال: صقر كول)...">
     <select id="room-select">
       <option value="الأصدقاء">قسم الأصدقاء 👥</option>
       <option value="الأهل">قسم الأهل 🏠</option>
@@ -41,26 +57,54 @@
     <button onclick="joinRoom()">دخول الغرفة</button>
   </div>
 
-  <!-- الشاشة الرئيسية بعد الدخول -->
+  <!-- الشاشة الرئيسية -->
   <div id="main-screen" class="hidden">
-    <h3 id="welcome-msg" style="color: #38bdf8;"></h3>
-    <p>المتواجدون حالياً في قسم (<span id="current-room-name"></span>):</p>
+    <h3 id="welcome-msg" style="color: #38bdf8; margin-bottom: 5px;"></h3>
+    <p style="color: #94a3b8; font-size: 14px; margin-top: 0;">أنت الآن في غرفة: (<span id="current-room-name" style="color: #e2e8f0; font-weight: bold;"></span>)</p>
     
-    <!-- إشعار مكالمة واردة -->
-    <div id="incoming-call-box" class="incoming-alert hidden">
-      <span id="caller-name"></span> يتصل بك...
-      <button onclick="acceptCall()" style="background:#10b981;">رد على المكالمة 📞</button>
-      <button onclick="rejectCall()" style="background:#ef4444;">رفض ❌</button>
-    </div>
-
     <ul id="users-ul" class="user-list"></ul>
+
+    <!-- صالة الألعاب المباشرة بدون iframe -->
+    <div id="games-section" class="games-section hidden">
+      <div class="games-header">🎮 صالة الألعاب التفاعلية (أثناء الانتظار)</div>
+      <div class="games-btn-group">
+        <button onclick="showGame('xo')">❌❌ إكس أو</button>
+        <button onclick="showGame('snake')">🐍 لعبة الثعبان</button>
+      </div>
+
+      <!-- لعبة إكس أو -->
+      <div id="xo-game" class="game-area hidden">
+        <div id="xo-status" style="margin-bottom: 10px; font-weight: bold; color: #38bdf8;">دور اللاعب: X</div>
+        <div class="xo-board">
+          <div class="xo-cell" onclick="makeMove(this, 0)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 1)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 2)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 3)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 4)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 5)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 6)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 7)"></div>
+          <div class="xo-cell" onclick="makeMove(this, 8)"></div>
+        </div>
+        <button onclick="resetXO()" style="background: #eab308; color:#000; margin-top: 15px; width: 150px;">إعادة اللعب 🔄</button>
+      </div>
+
+      <!-- لعبة الثعبان -->
+      <div id="snake-game" class="game-area hidden">
+        <div id="snake-score" style="margin-bottom: 10px; font-weight: bold; color: #10b981;">النقاط: 0</div>
+        <canvas id="snakeCanvas" width="280" height="280"></canvas>
+        <p style="font-size: 12px; color: #94a3b8; margin: 5px 0;">استخدم أسهم الكيبورد للتحكم ⬆️ ⬇️ ⬅️ ➡️</p>
+        <button onclick="startSnakeGame()" style="background: #10b981; margin-top: 5px; width: 150px;">بدء اللعبة ▶️</button>
+      </div>
+    </div>
 
     <!-- شاشة الفيديوهات -->
     <div id="video-box" class="video-container hidden">
       <video id="localVideo" autoplay playsinline muted></video>
       <video id="remoteVideo" autoplay playsinline></video>
-      <button onclick="endCall()" style="background: #ef4444;">إنهاء المكالمة 🔇</button>
+      <button onclick="endCall()" style="background: #ef4444; margin-top: 10px;">إنهاء المكالمة 🔇</button>
     </div>
+
   </div>
 </div>
 
@@ -68,9 +112,6 @@
   const socket = io();
   let localStream;
   let peerConnection;
-  let currentTargetSocketId = null;
-  let incomingCallerSignal = null;
-
   const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
   async function joinRoom() {
@@ -84,43 +125,154 @@
     document.getElementById('welcome-msg').innerText = `أهلاً بك يا ${username}`;
     document.getElementById('current-room-name').innerText = room;
 
-    // تشغيل الكاميرا المباشرة
     try {
       localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       document.getElementById('localVideo').srcObject = localStream;
     } catch (e) {
-      console.warn('لم يتم العثور على كاميرا أو مايك:', e);
+      console.warn('الكاميرا أو الميكروفون غير متاحين:', e);
     }
 
     socket.emit('join-room', { username, room });
   }
 
-  // استقبال قائمة المتواجدين
   socket.on('room-users', (users) => {
     const ul = document.getElementById('users-ul');
+    const gamesSection = document.getElementById('games-section');
     ul.innerHTML = '';
 
-    users.forEach(u => {
-      if (u.socketId !== socket.id) {
+    let otherUsers = users.filter(u => u.socketId !== socket.id);
+
+    if (otherUsers.length > 0) {
+      gamesSection.classList.add('hidden');
+      otherUsers.forEach(u => {
         const li = document.createElement('li');
         li.className = 'user-item';
         li.innerHTML = `
-          <span>👤 ${u.username}</span>
+          <span style="font-weight: 500;">👤 ${u.username}</span>
           <button onclick="startCall('${u.socketId}')">اتصال خاص 📞</button>
         `;
         ul.appendChild(li);
-      }
-    });
-
-    if (ul.children.length === 0) {
-      ul.innerHTML = '<li style="text-align:center; color:#94a3b8;">لا يوجد أحد في الغرفة حالياً</li>';
+      });
+    } else {
+      gamesSection.classList.remove('hidden');
+      ul.innerHTML = `
+        <li style="text-align:center; padding: 20px; color:#94a3b8; background: none; border: none;">
+          <span style="font-size: 16px;">👥 لا يوجد أحد في الغرفة حالياً</span><br>
+          <span class="waiting-pulse">⏳ أنت في غرفة الانتظار.. العب تسلية لحين دخول أحد!</span>
+        </li>`;
     }
   });
 
-  // بدء اتصال فردي خاص
+  // التحكم في عرض الألعاب
+  function showGame(gameType) {
+    document.getElementById('xo-game').classList.add('hidden');
+    document.getElementById('snake-game').classList.add('hidden');
+    clearInterval(snakeInterval);
+
+    if (gameType === 'xo') {
+      document.getElementById('xo-game').classList.remove('hidden');
+      resetXO();
+    } else if (gameType === 'snake') {
+      document.getElementById('snake-game').classList.remove('hidden');
+    }
+  }
+
+  // --- كود لعبة إكس أو ---
+  let xoBoard = ['', '', '', '', '', '', '', '', ''];
+  let xoTurn = 'X';
+  let xoActive = true;
+
+  function makeMove(cell, index) {
+    if (xoBoard[index] !== '' || !xoActive) return;
+    xoBoard[index] = xoTurn;
+    cell.innerText = xoTurn;
+    cell.style.color = xoTurn === 'X' ? '#38bdf8' : '#ef4444';
+
+    if (checkXOWin()) {
+      document.getElementById('xo-status').innerText = `🎉 الفائز هو: ${xoTurn}`;
+      xoActive = false;
+      return;
+    }
+
+    if (!xoBoard.includes('')) {
+      document.getElementById('xo-status').innerText = 'تعادل!';
+      xoActive = false;
+      return;
+    }
+
+    xoTurn = xoTurn === 'X' ? 'O' : 'X';
+    document.getElementById('xo-status').innerText = `دور اللاعب: ${xoTurn}`;
+  }
+
+  function checkXOWin() {
+    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return wins.some(w => xoBoard[w[0]] && xoBoard[w[0]] === xoBoard[w[1]] && xoBoard[w[0]] === xoBoard[w[2]]);
+  }
+
+  function resetXO() {
+    xoBoard = ['', '', '', '', '', '', '', '', ''];
+    xoTurn = 'X';
+    xoActive = true;
+    document.getElementById('xo-status').innerText = 'دور اللاعب: X';
+    document.querySelectorAll('.xo-cell').forEach(c => c.innerText = '');
+  }
+
+  // --- كود لعبة الثعبان ---
+  let snakeInterval;
+  function startSnakeGame() {
+    const canvas = document.getElementById('snakeCanvas');
+    const ctx = canvas.getContext('2d');
+    const grid = 14;
+    let snake = [{x: 140, y: 140}];
+    let food = {x: 70, y: 70};
+    let dx = grid, dy = 0;
+    let score = 0;
+
+    clearInterval(snakeInterval);
+
+    document.onkeydown = (e) => {
+      if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
+      else if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
+      else if (e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
+      else if (e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
+    };
+
+    snakeInterval = setInterval(() => {
+      const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+      if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.some(s => s.x === head.x && s.y === head.y)) {
+        alert('انتهت اللعبة! مجموع النقاط: ' + score);
+        clearInterval(snakeInterval);
+        return;
+      }
+
+      snake.unshift(head);
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        document.getElementById('snake-score').innerText = 'النقاط: ' + score;
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / grid)) * grid,
+          y: Math.floor(Math.random() * (canvas.height / grid)) * grid
+        };
+      } else {
+        snake.pop();
+      }
+
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(food.x, food.y, grid - 2, grid - 2);
+
+      ctx.fillStyle = '#10b981';
+      snake.forEach(s => ctx.fillRect(s.x, s.y, grid - 2, grid - 2));
+    }, 120);
+  }
+
   async function startCall(targetSocketId) {
-    currentTargetSocketId = targetSocketId;
     document.getElementById('video-box').classList.remove('hidden');
+    document.getElementById('users-ul').classList.add('hidden');
+    document.getElementById('games-section').classList.add('hidden');
 
     peerConnection = createPeerConnection(targetSocketId);
     const offer = await peerConnection.createOffer();
@@ -129,67 +281,21 @@
     socket.emit('call-user', { targetSocketId, signalData: offer });
   }
 
-  // استقبال اتصال فريد من شخص آخر
-  socket.on('incoming-call', ({ fromSocketId, callerName, signalData }) => {
-    currentTargetSocketId = fromSocketId;
-    incomingCallerSignal = signalData;
-
-    document.getElementById('caller-name').innerText = callerName;
-    document.getElementById('incoming-call-box').classList.remove('hidden');
-  });
-
-  // القبول على المكالمة الواردة
-  async function acceptCall() {
-    document.getElementById('incoming-call-box').classList.add('hidden');
-    document.getElementById('video-box').classList.remove('hidden');
-
-    peerConnection = createPeerConnection(currentTargetSocketId);
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallerSignal));
-
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    socket.emit('accept-call', { targetSocketId: currentTargetSocketId, signalData: answer });
-  }
-
-  // الطرف الآخر قبل المكالمة
-  socket.on('call-accepted', async ({ signalData }) => {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(signalData));
-  });
-
-  function rejectCall() {
-    document.getElementById('incoming-call-box').classList.add('hidden');
-    socket.emit('reject-call', { targetSocketId: currentTargetSocketId });
-  }
-
-  socket.on('call-rejected', () => {
-    alert('تم رفض المكالمة من الطرف الآخر');
-    endCall();
-  });
-
   function createPeerConnection(targetSocketId) {
     const pc = new RTCPeerConnection(rtcConfig);
-
     if (localStream) {
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     }
-
     pc.ontrack = (event) => {
       document.getElementById('remoteVideo').srcObject = event.streams[0];
     };
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        // يتم النقل تلقائياً عبر signaling
-      }
-    };
-
     return pc;
   }
 
   function endCall() {
     if (peerConnection) peerConnection.close();
     document.getElementById('video-box').classList.add('hidden');
+    document.getElementById('users-ul').classList.remove('hidden');
   }
 </script>
 
