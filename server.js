@@ -2,90 +2,111 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 const helmet = require('helmet');
 
 const app = express();
-
-// إعدادات الحماية
 app.use(helmet({ contentSecurityPolicy: false }));
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  maxHttpBufferSize: 1e7
-});
+const io = new Server(server, { maxHttpBufferSize: 1e7 });
 
-// السماح بقراءة الملفات من المجلد الرئيسي ومن مجلد public إن وجد
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// توجيه الصفحة الرئيسية مباشرة إلى index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
-    if (err) {
-      // في حال كان الملف داخل مجلد public
-      res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }
-  });
+  const rootIndex = path.join(__dirname, 'index.html');
+  const publicIndex = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(rootIndex)) res.sendFile(rootIndex);
+  else if (fs.existsSync(publicIndex)) res.sendFile(publicIndex);
+  else res.send('<h2>index.html not found</h2>');
 });
 
-// تخزين المستخدمين المتصلين
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
+  console.log('مستخدم جديد متصل:', socket.id);
+
   socket.on('join-room', ({ username, password, room, avatar }) => {
     const isNameTaken = Object.values(connectedUsers).some(
       user => user.username.toLowerCase() === username.toLowerCase()
     );
-
     if (isNameTaken) {
-      socket.emit('login-error', 'يوجد هذا الاسم بالفعل، يرجى اختيار اسم مستخدم آخر للدخول (مثال: ' + username + '1)');
+      socket.emit('login-error', 'اسم المستخدم مستخدم بالفعل، اختر اسماً آخر.');
       return;
     }
-
     connectedUsers[socket.id] = { username, room, avatar: avatar || null };
     socket.join(room);
-
     socket.emit('login-success', { username, room });
     updateRoomUsers(room);
   });
 
-  socket.on('request-communication', ({ targetSocketId, type }) => {
+  // --- 📹 إشارات الصوت والفيديو (WebRTC Signaling) ---
+  socket.on('call-user', ({ targetSocketId, offer, type }) => {
     const sender = connectedUsers[socket.id];
-    if (sender) {
-      io.to(targetSocketId).emit('incoming-request', {
-        fromSocketId: socket.id,
-        callerName: sender.username,
-        callerAvatar: sender.avatar,
-        type
-      });
-    }
-  });
-
-  socket.on('accept-request', ({ targetSocketId, signalData, type }) => {
-    io.to(targetSocketId).emit('request-accepted', {
+    io.to(targetSocketId).emit('incoming-call', {
       fromSocketId: socket.id,
-      signalData,
+      callerName: sender ? sender.username : 'مجهول',
+      offer,
       type
     });
   });
 
-  socket.on('reject-request', ({ targetSocketId }) => {
-    io.to(targetSocketId).emit('request-rejected', {
-      fromSocketId: socket.id
+  socket.on('make-answer', ({ targetSocketId, answer }) => {
+    io.to(targetSocketId).emit('call-accepted', {
+      fromSocketId: socket.id,
+      answer
     });
   });
 
+  socket.on('ice-candidate', ({ targetSocketId, candidate }) => {
+    io.to(targetSocketId).emit('ice-candidate', {
+      fromSocketId: socket.id,
+      candidate
+    });
+  });
+
+  socket.on('reject-call', ({ targetSocketId }) => {
+    io.to(targetSocketId).emit('call-rejected');
+  });
+
+  socket.on('end-call', ({ targetSocketId }) => {
+    io.to(targetSocketId).emit('call-ended');
+  });
+
+  // --- 💬 الدردشة الكتابية ---
   socket.on('send-chat-msg', ({ targetSocketId, message }) => {
     const sender = connectedUsers[socket.id];
-    const senderName = sender ? sender.username : 'مجهول';
-
-    // 👈 طباعة الرسالة مباشرة في التيرمينال ليقرأها السيرفر
-    console.log(`💬 [رسالة شات] من ${senderName}: ${message}`);
-
+    console.log(`💬 [رسالة شات] من ${sender ? sender.username : 'مجهول'}: ${message}`);
     io.to(targetSocketId).emit('receive-chat-msg', {
-      senderName: senderName,
+      senderName: sender ? sender.username : 'مجهول',
       message
     });
+  });
+
+  // --- 🎮 غرف التحدي والألعاب الأونلاين ---
+  socket.on('send-game-challenge', ({ targetSocketId, gameType }) => {
+    const sender = connectedUsers[socket.id];
+    io.to(targetSocketId).emit('incoming-game-challenge', {
+      fromSocketId: socket.id,
+      challengerName: sender ? sender.username : 'مجهول',
+      gameType
+    });
+  });
+
+  socket.on('accept-game-challenge', ({ targetSocketId, gameType }) => {
+    io.to(targetSocketId).emit('game-challenge-accepted', {
+      fromSocketId: socket.id,
+      gameType
+    });
+  });
+
+  socket.on('reject-game-challenge', ({ targetSocketId }) => {
+    io.to(targetSocketId).emit('game-challenge-rejected');
+  });
+
+  socket.on('game-move', ({ targetSocketId, moveData }) => {
+    io.to(targetSocketId).emit('receive-game-move', moveData);
   });
 
   socket.on('disconnect', () => {
@@ -101,12 +122,9 @@ io.on('connection', (socket) => {
     const roomUsers = Object.entries(connectedUsers)
       .filter(([id, u]) => u.room === room)
       .map(([id, u]) => ({ socketId: id, username: u.username, avatar: u.avatar }));
-
     io.to(room).emit('room-users', roomUsers);
   }
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
