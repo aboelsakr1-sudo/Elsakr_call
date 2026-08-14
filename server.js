@@ -2,64 +2,100 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const helmet = require('helmet');
 
 const app = express();
+
+// إعدادات الحماية
+app.use(helmet({ contentSecurityPolicy: false }));
+
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  maxHttpBufferSize: 1e7
 });
 
-app.use(express.static(path.join(__dirname)));
+// السماح بقراءة الملفات من المجلد الرئيسي ومن مجلد public إن وجد
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// تخزين المستخدمين المتصلين: socket.id -> { username, room }
-const users = {};
+// توجيه الصفحة الرئيسية مباشرة إلى index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    if (err) {
+      // في حال كان الملف داخل مجلد public
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+  });
+});
+
+// تخزين المستخدمين المتصلين
+const connectedUsers = {};
 
 io.on('connection', (socket) => {
-  console.log('مستخدم جديد اتصل:', socket.id);
+  socket.on('join-room', ({ username, password, room, avatar }) => {
+    const isNameTaken = Object.values(connectedUsers).some(
+      user => user.username.toLowerCase() === username.toLowerCase()
+    );
 
-  // 1. تسجيل اسم المستخدم وانضمامه للغرفة
-  socket.on('join-room', ({ username, room }) => {
-    users[socket.id] = { username, room };
+    if (isNameTaken) {
+      socket.emit('login-error', 'يوجد هذا الاسم بالفعل، يرجى اختيار اسم مستخدم آخر للدخول (مثال: ' + username + '1)');
+      return;
+    }
+
+    connectedUsers[socket.id] = { username, room, avatar: avatar || null };
     socket.join(room);
 
-    // تحديث قائمة المستخدمين في هذه الغرفة
+    socket.emit('login-success', { username, room });
     updateRoomUsers(room);
   });
 
-  // 2. إرسال طلب اتصال خاص لشخص معين (1-on-1)
-  socket.on('call-user', ({ targetSocketId, signalData }) => {
-    const caller = users[socket.id];
-    io.to(targetSocketId).emit('incoming-call', {
+  socket.on('request-communication', ({ targetSocketId, type }) => {
+    const sender = connectedUsers[socket.id];
+    if (sender) {
+      io.to(targetSocketId).emit('incoming-request', {
+        fromSocketId: socket.id,
+        callerName: sender.username,
+        callerAvatar: sender.avatar,
+        type
+      });
+    }
+  });
+
+  socket.on('accept-request', ({ targetSocketId, signalData, type }) => {
+    io.to(targetSocketId).emit('request-accepted', {
       fromSocketId: socket.id,
-      callerName: caller ? caller.username : 'شخص ما',
-      signalData
+      signalData,
+      type
     });
   });
 
-  // 3. قبول الاتصال المباشر
-  socket.on('accept-call', ({ targetSocketId, signalData }) => {
-    io.to(targetSocketId).emit('call-accepted', { signalData });
+  socket.on('reject-request', ({ targetSocketId }) => {
+    io.to(targetSocketId).emit('request-rejected', {
+      fromSocketId: socket.id
+    });
   });
 
-  // 4. رفض أو إنهاء المكالمة
-  socket.on('reject-call', ({ targetSocketId }) => {
-    io.to(targetSocketId).emit('call-rejected');
+  socket.on('send-chat-msg', ({ targetSocketId, message }) => {
+    const sender = connectedUsers[socket.id];
+    io.to(targetSocketId).emit('receive-chat-msg', {
+      senderName: sender ? sender.username : 'مجهول',
+      message
+    });
   });
 
-  // عند انقطاع الاتصال
   socket.on('disconnect', () => {
-    const user = users[socket.id];
+    const user = connectedUsers[socket.id];
     if (user) {
       const room = user.room;
-      delete users[socket.id];
+      delete connectedUsers[socket.id];
       updateRoomUsers(room);
     }
   });
 
   function updateRoomUsers(room) {
-    const roomUsers = Object.entries(users)
+    const roomUsers = Object.entries(connectedUsers)
       .filter(([id, u]) => u.room === room)
-      .map(([id, u]) => ({ socketId: id, username: u.username }));
+      .map(([id, u]) => ({ socketId: id, username: u.username, avatar: u.avatar }));
 
     io.to(room).emit('room-users', roomUsers);
   }
@@ -67,5 +103,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
