@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elsakr call</title>
+    <meta name="author"content="Fathi sakr">
+    <meta name="robots"content="index,follow">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b111e;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* الشريط العلوي */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #0d1527;
+            border-bottom: 1px solid #1a263d;
+        }
+
+        .status {
+            color: #22c55e;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status.disconnected {
+            color: #ef4444;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+            height: calc(100vh - 65px);
+        }
+
+        .card {
+            background-color: #151f32;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #1e2d4a;
+        }
+
+        .card-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* قسم الدردشة (اليسار/اليمن حسب RTL) */
+        .chat-section {
+            flex: 1;
+            max-width: 380px;
+        }
+
+        .messages-box {
+            flex: 1;
+            background-color: #0b101d;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #1a263d;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message-item {
+            background-color: #1e2d4a;
+            padding: 8px 12px;
+            border-radius: 6px;
+            max-width: 85%;
+            word-break: break-word;
+            font-size: 14px;
+        }
+
+        .message-item.my-msg {
+            align-self: flex-start;
+            background-color: #2563eb;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            background-color: #ffffff;
+            color: #000;
+        }
+
+        .chat-input-container button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .chat-input-container button:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* قسم المكالمة */
+        .call-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .video-box {
+            background-color: #000000;
+            border-radius: 10px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 1px solid #1a263d;
+        }
+
+        /* أزرار التحكم بالمكالمة */
+        .controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-blue {
+            background-color: #2563eb;
+        }
+
+        .btn-blue:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-red {
+            background-color: #dc2626;
+        }
+
+        .btn-red:hover {
+            background-color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الشريط العلوي -->
+    <header>
+        <div id="statusText" class="status">🟢 متصل</div>
+        <div class="logo">ChatCall 💬</div>
+    </header>
+
+    <!-- منطقة المحتوى الرئيسية -->
+    <div class="main-container">
+
+        <!-- قسم الدردشة -->
+        <div class="card chat-section">
+            <div class="card-header">💬 الدردشة</div>
+            <div class="messages-box" id="messagesBox"></div>
+            <div class="chat-input-container">
+                <input type="text" id="msgInput" placeholder="اكتب رسالتك..." onkeypress="handleKeyPress(event)" />
+                <button onclick="sendChatMessage()">إرسال</button>
+            </div>
+        </div>
+
+        <!-- قسم المكالمة -->
+        <div class="card call-section">
+            <div class="card-header">📹 المكالمة</div>
+            
+            <div class="video-grid">
+                <video id="localVideo" autoplay playsinline muted class="video-box"></video>
+                <video id="remoteVideo" autoplay playsinline class="video-box"></video>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-blue" onclick="startCall()">📞 بدء المكالمة</button>
+                <button class="btn btn-blue" onclick="toggleAudio()">🎤 كتم الصوت</button>
+                <button class="btn btn-blue" onclick="toggleVideo()">📷 إيقاف الكاميرا</button>
+                <button class="btn btn-red" onclick="hangUp()">❌ إنهاء</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- السكريبتات -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // عناصر الشاشة
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const messagesBox = document.getElementById('messagesBox');
+        const msgInput = document.getElementById('msgInput');
+        const statusText = document.getElementById('statusText');
+
+        // متغيّرات المكالمة
+        let localStream;
+        let remoteStream;
+        let peerConnection;
+
+        const rtcConfig = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        // إدارة حالة الاتصال بالخادم
+        socket.on('connect', () => {
+            statusText.textContent = '🟢 متصل';
+            statusText.classList.remove('disconnected');
+        });
+
+        socket.on('disconnect', () => {
+            statusText.textContent = '🔴 غير متصل';
+            statusText.classList.add('disconnected');
+        });
+
+        /* --- نظام الدردشة --- */
+        function sendChatMessage() {
+            const text = msgInput.value.trim();
+            if (text) {
+                socket.emit('chat message', text);
+                msgInput.value = '';
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        socket.on('chat message', (data) => {
+            const msgEl = document.createElement('div');
+            msgEl.classList.add('message-item');
+            if (data.sender === socket.id) {
+                msgEl.classList.add('my-msg');
+            }
+            msgEl.textContent = data.text;
+            messagesBox.appendChild(msgEl);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        });
+
+        /* --- نظام المكالمة الصوتية والمصورة (WebRTC) --- */
+        async function initMedia() {
+            if (!localStream) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localVideo.srcObject = localStream;
+                } catch (err) {
+                    console.error('فشل الوصول للكاميرا/المايك:', err);
+                    alert('يرجى السماح بصلاحيات الوصول للكاميرا والميكروفون');
+                }
+            }
+        }
+
+        function createPeerConnection() {
+            peerConnection = new RTCPeerConnection(rtcConfig);
+
+            remoteStream = new MediaStream();
+            remoteVideo.srcObject = remoteStream;
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = (event) => {
+                event.streams[0].getTracks().forEach(track => {
+                    remoteStream.addTrack(track);
+                });
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('ice-candidate', event.candidate);
+                }
+            };
+        }
+
+        async function startCall() {
+            await initMedia();
+            createPeerConnection();
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            socket.emit('offer', offer);
+        }
+
+        socket.on('offer', async (offer) => {
+            await initMedia();
+            createPeerConnection();
+
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit('answer', answer);
+        });
+
+        socket.on('answer', async (answer) => {
+            if (peerConnection) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            }
+        });
+
+        socket.on('ice-candidate', async (candidate) => {
+            if (peerConnection) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+        });
+
+        function toggleAudio() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                }
+            }
+        }
+
+        function toggleVideo() {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                }
+            }
+        }
+
+        function hangUp() {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            localVideo.srcObject = null;
+            remoteVideo.srcObject = null;
+            socket.emit('hangup');
+        }
+
+        socket.on('hangup', () => {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            remoteVideo.srcObject = null;
+        });
+    </script>
+</body>
+</html>
