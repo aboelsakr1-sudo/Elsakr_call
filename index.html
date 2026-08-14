@@ -3,55 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> El Sakr Call </title>
+  <title>El Sakr Call - الصقر كول</title>
   <meta name="author"content="Fathi sakr">
   <meta name="robots"content="index,follow">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: #0a0e17; color: #e2e8f0; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .card { background: #161e2e; padding: 20px; border-radius: 16px; width: 100%; max-width: 680px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 1px solid #1f293a; position: relative; }
-    h2 { margin-top: 0; color: #38bdf8; text-align: center; font-size: 26px; }
+    .card { background: #161e2e; padding: 20px; border-radius: 16px; width: 100%; max-width: 680px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 1px solid #1f293a; }
+    h2, h3, h4 { margin-top: 0; color: #38bdf8; text-align: center; }
     input, select, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #1f293a; background: #0f172a; color: #f1f5f9; font-size: 15px; }
     button { background: #0284c7; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
     button:hover { background: #0369a1; }
     
-    /* التبويبات العلويّة */
     .nav-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #1f293a; padding-bottom: 10px; }
-    .tab-btn { background: #1f293a; color: #94a3b8; border: none; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold; text-align: center; }
+    .tab-btn { background: #1f293a; color: #94a3b8; border: none; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold; }
     .tab-btn.active { background: #0284c7; color: #fff; }
 
-    /* قائمة المستخدمين */
     .user-list { list-style: none; padding: 0; margin: 0; }
-    .user-item { background: #1f293a; padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2d3748; flex-wrap: wrap; gap: 8px; }
+    .user-item { background: #1f293a; padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
     .user-info { display: flex; align-items: center; gap: 10px; }
-    .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; overflow: hidden; }
-    .action-btns { display: flex; gap: 5px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #38bdf8; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; }
+    .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
     .action-btns button { padding: 6px 10px; margin: 0; font-size: 13px; width: auto; }
-    
-    /* تنبيه المكالمات والدردشة */
+
     .alert-box { background: #f59e0b; color: #000; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; text-align: center; }
 
-    /* النافذة المرئية والفيديو */
     .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    video { width: 100%; height: 180px; background: #000; border-radius: 10px; object-fit: cover; border: 2px solid #334155; }
+    video { width: 100%; height: 200px; background: #000; border-radius: 10px; object-fit: cover; border: 2px solid #38bdf8; }
 
-    /* صالة الألعاب */
+    /* الألعاب والتحديات */
     .games-container { background: #0f172a; border-radius: 12px; padding: 15px; border: 1px solid #1f293a; text-align: center; }
-    .game-menu { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
-    .game-menu button { background: #6d28d9; width: auto; padding: 8px 16px; }
+    .game-status { color: #f59e0b; font-weight: bold; margin-bottom: 10px; }
 
-    /* رقعة الشطرنج الرئيسية */
-    .chess-board { display: grid; grid-template-columns: repeat(8, 1fr); max-width: 320px; height: 320px; margin: 10px auto; border: 3px solid #38bdf8; border-radius: 4px; }
+    /* الشطرنج */
+    .chess-board { display: grid; grid-template-columns: repeat(8, 1fr); max-width: 320px; height: 320px; margin: 10px auto; border: 3px solid #38bdf8; }
     .chess-sq { display: flex; justify-content: center; align-items: center; font-size: 26px; cursor: pointer; user-select: none; }
     .chess-sq.white { background: #f0d9b5; color: #000; }
     .chess-sq.black { background: #b58863; color: #000; }
     .chess-sq.selected { background: #7fc97f !important; }
 
-    /* لعبة الدومينو واللودو */
-    .domino-board, .ludo-board { background: #1e293b; min-height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #a78bfa; margin-top: 10px; border: 2px dashed #4c1d95; }
+    /* لعبة XO */
+    .xo-board { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 240px; height: 240px; margin: 10px auto; gap: 5px; }
+    .xo-sq { background: #1e293b; border: 2px solid #38bdf8; display: flex; justify-content: center; align-items: center; font-size: 36px; font-weight: bold; color: #38bdf8; cursor: pointer; }
 
-    /* الدردشة النصية */
+    /* لعبة الدومينو التفاعلية */
+    .domino-board-area { background: #131c2e; border: 2px dashed #10b981; min-height: 120px; border-radius: 10px; padding: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+    .domino-tile { background: #f8fafc; color: #0f172a; border: 2px solid #000; border-radius: 6px; width: 42px; height: 75px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 4px; font-weight: bold; font-size: 18px; cursor: pointer; user-select: none; }
+    .domino-tile-divider { width: 100%; height: 2px; background: #000; }
+    .domino-hand { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
+
+    /* لعبة اللودو التفاعلية */
+    .ludo-track { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; max-width: 360px; margin: 15px auto; }
+    .ludo-cell { background: #1e293b; border: 1px solid #38bdf8; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .ludo-controls { display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 10px; }
+
     .chat-box { background: #0f172a; border: 1px solid #1f293a; border-radius: 8px; height: 150px; overflow-y: auto; padding: 10px; margin-bottom: 8px; text-align: right; }
     .chat-msg { margin-bottom: 6px; padding: 5px 8px; background: #1f293a; border-radius: 6px; display: inline-block; clear: both; }
 
@@ -63,108 +69,115 @@
 <div class="card">
   <h2>🦅 El Sakr Call - الصقر كول</h2>
 
-  <!-- 1️⃣ شاشة الدخول -->
+  <!-- شاشة التسجيل -->
   <div id="login-screen">
     <div id="login-error-msg" style="color: #ef4444; font-weight: bold; margin-bottom: 10px; text-align: center;"></div>
-    
-    <input type="text" id="username" placeholder="اسم المستخدم (مثال: fathi)...">
+    <input type="text" id="username" placeholder="اسم المستخدم...">
     <input type="password" id="password" placeholder="كلمة المرور...">
-    
-    <label style="font-size: 13px; color: #94a3b8; display: block; text-align: right; margin-top: 5px;">صورة شخصية (اختياري):</label>
-    <input type="file" id="avatar-input" accept="image/*" style="padding: 5px;">
-
+    <input type="file" id="avatar-input" accept="image/*">
     <select id="room-select">
       <option value="الأصدقاء">قسم الأصدقاء 👥</option>
       <option value="الأهل">قسم الأهل 🏠</option>
       <option value="العمل">قسم العمل 💼</option>
     </select>
-
     <button type="button" id="login-btn">دخول التطبيق 🚀</button>
   </div>
 
-  <!-- 2️⃣ الشاشة الرئيسية للوحة التحكم -->
+  <!-- الشاشة الرئيسية -->
   <div id="main-screen" class="hidden">
-    
-    <!-- التبويبات -->
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('users-tab', event)">👥 المتصلون</button>
-      <button class="tab-btn" onclick="switchTab('games-tab', event)">♟️ صالة الألعاب</button>
+      <button class="tab-btn active" onclick="switchTab('users-tab', event)">👥 المتصلون والتحديات</button>
+      <button class="tab-btn" onclick="switchTab('games-tab', event)">🎮 غرف الألعاب</button>
       <button class="tab-btn" onclick="switchTab('profile-tab', event)">👤 الملف الشخصي</button>
     </div>
 
-    <!-- إشعار طلب وارد -->
-    <div id="incoming-request-box" class="alert-box hidden">
-      <div id="request-text"></div>
+    <!-- تنبيه الطلبات الواردة -->
+    <div id="incoming-alert-box" class="alert-box hidden">
+      <div id="alert-text"></div>
       <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-        <button onclick="acceptRequest()" style="background:#10b981; width: 100px;">قبول 🟢</button>
-        <button onclick="rejectRequest()" style="background:#ef4444; width: 100px;">رفض 🔴</button>
+        <button onclick="acceptIncoming()" style="background:#10b981; width: 100px;">قبول 🟢</button>
+        <button onclick="rejectIncoming()" style="background:#ef4444; width: 100px;">رفض 🔴</button>
       </div>
     </div>
 
-    <!-- تبويب المتصلين -->
+    <!-- قائمة المتصلين والتحدي -->
     <div id="users-tab">
-      <p style="color: #94a3b8; font-size: 14px; margin-top:0;">المستخدمون النشطون في غرفة (<span id="room-display" style="color:#fff;"></span>):</p>
+      <p style="color: #94a3b8; font-size: 14px;">المستخدمون المتصلون (<span id="room-display"></span>):</p>
       <ul id="users-ul" class="user-list"></ul>
     </div>
 
-    <!-- تبويب صالة الألعاب -->
+    <!-- غرف الألعاب والتحدي المباشر -->
     <div id="games-tab" class="hidden">
       <div class="games-container">
-        <h3>🎮 صالة الألعاب التفاعلية</h3>
-        <div class="game-menu">
-          <button onclick="loadGame('chess')" style="background: #0284c7;">♟️ الشطرنج (أساسية)</button>
-          <button onclick="loadGame('domino')">🀄 الدومينو</button>
-          <button onclick="loadGame('ludo')">🎲 اللودو</button>
+        <h3>🎮 صالة الألعاب والتحدي المباشر</h3>
+        <div id="game-status" class="game-status">اختر خديماً أو قبل تحدياً لبدء اللعب كخصم!</div>
+
+        <div style="display: flex; gap: 5px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap;">
+          <button onclick="switchGameView('chess')" style="width:auto;">♟️ شطرنج</button>
+          <button onclick="switchGameView('xo')" style="width:auto; background:#8b5cf6;">❌⭕ لعبة XO</button>
+          <button onclick="switchGameView('domino')" style="width:auto; background:#10b981;">🀄 دومينو</button>
+          <button onclick="switchGameView('ludo')" style="width:auto; background:#f59e0b;">🎲 لودو</button>
         </div>
 
-        <!-- لعبة الشطرنج -->
+        <!-- الشطرنج -->
         <div id="chess-view" class="game-view">
-          <div style="margin-bottom: 5px; color: #38bdf8; font-weight: bold;">رقعة الشطرنج</div>
           <div id="chess-board" class="chess-board"></div>
-          <button onclick="initChess()" style="background: #eab308; color:#000; width: 150px;">إعادة اللعبة 🔄</button>
         </div>
 
-        <!-- لعبة الدومينو -->
+        <!-- لعبة XO -->
+        <div id="xo-view" class="game-view hidden">
+          <div id="xo-board" class="xo-board"></div>
+        </div>
+
+        <!-- الدومينو التفاعلية -->
         <div id="domino-view" class="game-view hidden">
-          <div class="domino-board">🀄 طاولة الدومينو جاهزة للعب مع الأصدقاء</div>
+          <h4>🀄 طاولة الدومينو المباشرة</h4>
+          <p style="font-size:13px; color:#94a3b8;">اضغط على القطعة في يدك لإسقاطها في منتصف الطاولة:</p>
+          <div id="domino-table" class="domino-board-area">
+            <span style="color:#64748b;">الطاولة فارغة حالياً.. ابدأ باللعب!</span>
+          </div>
+          <p style="margin-top:15px; font-weight:bold;">قطعك المتاحة (يدك):</p>
+          <div id="domino-hand" class="domino-hand"></div>
         </div>
 
-        <!-- لعبة اللودو -->
+        <!-- اللودو التفاعلية -->
         <div id="ludo-view" class="game-view hidden">
-          <div class="ludo-board">🎲 طاولة اللودو التفاعلية</div>
+          <h4>🎲 طاولة سباق اللودو المباشرة</h4>
+          <div class="ludo-controls">
+            <button onclick="rollLudoDice()" style="width: auto; background: #eab308; color: #000;">🎲 رمي النرد</button>
+            <span id="ludo-dice-result" style="font-size: 22px; font-weight: bold; color: #f59e0b;">-</span>
+          </div>
+          <div id="ludo-track" class="ludo-track"></div>
         </div>
+
       </div>
     </div>
 
-    <!-- تبويب البروفايل -->
+    <!-- البروفايل -->
     <div id="profile-tab" class="hidden" style="text-align: center;">
       <div id="profile-avatar-preview" class="user-avatar" style="width: 80px; height: 80px; margin: 10px auto; font-size: 28px;"></div>
-      <h3 id="profile-name-display" style="color: #38bdf8;"></h3>
-      <p style="color: #94a3b8;">حالة الحساب: <span style="color: #10b981;">نشط الآن 🟢</span></p>
+      <h3 id="profile-name-display"></h3>
     </div>
 
-    <!-- شاشة الاتصال / المحادثة -->
+    <!-- صندوق المحادثات والاتصال -->
     <div id="communication-box" class="hidden" style="margin-top: 15px; border-top: 2px solid #1f293a; padding-top: 15px;">
-      
-      <!-- منطقة الرسائل النصية -->
       <div id="chat-section" class="hidden">
-        <h4 style="margin: 5px 0;">💬 المحادثة الكتابية</h4>
+        <h4>💬 الدردشة المباشرة</h4>
         <div id="chat-box" class="chat-box"></div>
         <div style="display: flex; gap: 5px;">
-          <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..." style="margin:0;">
+          <input type="text" id="chat-input" placeholder="اكتب رسالتك..." style="margin:0;">
           <button onclick="sendChatMessage()" style="width: 80px; margin:0;">إرسال</button>
         </div>
       </div>
 
-      <!-- منطقة الصوت والفيديو -->
       <div id="media-section" class="hidden">
         <div class="video-grid">
-          <video id="localVideo" autoplay playsinline muted></video>
-          <video id="remoteVideo" autoplay playsinline></video>
+          <div><p style="text-align:center;margin:0;">كاميـرتك</p><video id="localVideo" autoplay playsinline muted></video></div>
+          <div><p style="text-align:center;margin:0;">الطرف الآخر</p><video id="remoteVideo" autoplay playsinline></video></div>
         </div>
       </div>
 
-      <button onclick="closeCommunication()" style="background: #ef4444; margin-top: 10px;">إنهاء التواصل ✖</button>
+      <button onclick="endCall()" style="background: #ef4444; margin-top: 10px;">إنهاء التواصل / الاتصال ✖</button>
     </div>
 
   </div>
@@ -173,218 +186,198 @@
 <script>
   const socket = io();
   let currentUser = { username: '', room: '', avatar: null };
-  let currentTargetSocketId = null;
-  let activeRequestData = null;
-  let peerConnection = null;
-  let localStream = null;
+  let activeOpponentId = null;
+  let activeRequest = null;
 
+  // WebRTC Variables
+  let pc = null;
+  let localStream = null;
   const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-  // إعداد زر تسجيل الدخول
   document.getElementById('login-btn').addEventListener('click', login);
 
   function login() {
-    document.getElementById('login-error-msg').innerText = '';
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
     const room = document.getElementById('room-select').value;
     const avatarInput = document.getElementById('avatar-input');
 
-    if (!username || !password) {
-      document.getElementById('login-error-msg').innerText = 'يرجى كتابة اسم المستخدم وكلمة المرور!';
-      return;
-    }
+    if (!username || !password) return alert('ادخل الاسم وكلمة المرور');
 
     if (avatarInput.files && avatarInput.files[0]) {
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = (e) => {
         currentUser.avatar = e.target.result;
-        sendJoinEvent(username, password, room);
+        socket.emit('join-room', { username, password, room, avatar: currentUser.avatar });
       };
       reader.readAsDataURL(avatarInput.files[0]);
     } else {
-      sendJoinEvent(username, password, room);
+      socket.emit('join-room', { username, password, room });
     }
   }
 
-  function sendJoinEvent(username, password, room) {
-    currentUser.username = username;
-    currentUser.room = room;
-    socket.emit('join-room', { username, password, room, avatar: currentUser.avatar });
-  }
-
-  // استجابة خطأ الاسم المكرر
-  socket.on('login-error', (msg) => {
-    document.getElementById('login-error-msg').innerText = msg;
-  });
-
-  // استجابة نجاح تسجيل الدخول
+  socket.on('login-error', msg => alert(msg));
   socket.on('login-success', ({ username, room }) => {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('main-screen').classList.remove('hidden');
     document.getElementById('room-display').innerText = room;
-    
-    // إعداد البروفايل
     document.getElementById('profile-name-display').innerText = username;
-    const avatarBox = document.getElementById('profile-avatar-preview');
-    if (currentUser.avatar) {
-      avatarBox.innerHTML = `<img src="${currentUser.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-    } else {
-      avatarBox.innerText = username.charAt(0).toUpperCase();
-    }
-
-    initChess(); // تشغيل لعبة الشطرنج تلقائياً
+    initChess();
+    initXO();
+    initDomino();
+    initLudo();
   });
 
-  // تحديث قائمة المتصلين
   socket.on('room-users', (users) => {
     const ul = document.getElementById('users-ul');
     ul.innerHTML = '';
-
     const others = users.filter(u => u.socketId !== socket.id);
 
     if (others.length === 0) {
-      ul.innerHTML = `<li style="text-align:center; color:#94a3b8; padding:15px;">لا يوجد مستخدمون آخرون في الغرفة حالياً.</li>`;
+      ul.innerHTML = '<li style="text-align:center; color:#94a3b8; padding:10px;">لا يوجد مستخدمون آخرون في الغرفة حالياً.</li>';
       return;
     }
 
     others.forEach(u => {
       const li = document.createElement('li');
       li.className = 'user-item';
-
-      const avatarHTML = u.avatar 
-        ? `<img src="${u.avatar}" class="user-avatar">`
-        : `<div class="user-avatar">${u.username.charAt(0).toUpperCase()}</div>`;
-
       li.innerHTML = `
         <div class="user-info">
-          ${avatarHTML}
-          <span style="font-weight:bold;">${u.username}</span>
+          <div class="user-avatar">${u.username.charAt(0).toUpperCase()}</div>
+          <b>${u.username}</b>
         </div>
         <div class="action-btns">
-          <button onclick="requestComm('${u.socketId}', 'chat')" style="background:#0284c7;">💬 دردشة</button>
-          <button onclick="requestComm('${u.socketId}', 'voice')" style="background:#059669;">🎙️ صوت</button>
-          <button onclick="requestComm('${u.socketId}', 'video')" style="background:#7c3aed;">📹 فيديو</button>
+          <button onclick="startCall('${u.socketId}', 'voice')" style="background:#059669;">🎙️ صوت</button>
+          <button onclick="startCall('${u.socketId}', 'video')" style="background:#7c3aed;">📹 فيديو</button>
+          <button onclick="openChat('${u.socketId}')" style="background:#0284c7;">💬 شات</button>
+          <button onclick="sendChallenge('${u.socketId}', 'xo')" style="background:#8b5cf6;">⚔️ XO</button>
+          <button onclick="sendChallenge('${u.socketId}', 'chess')" style="background:#eab308; color:#000;">⚔️ شطرنج</button>
+          <button onclick="sendChallenge('${u.socketId}', 'domino')" style="background:#10b981;">⚔️ دومينو</button>
+          <button onclick="sendChallenge('${u.socketId}', 'ludo')" style="background:#f59e0b;">⚔️ لودو</button>
         </div>
       `;
       ul.appendChild(li);
     });
   });
 
-  // طلب الاتصال أو المحادثة
-  async function requestComm(targetSocketId, type) {
-    currentTargetSocketId = targetSocketId;
-
-    if (type === 'voice' || type === 'video') {
-      try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-          video: type === 'video',
-          audio: true
-        });
-        document.getElementById('localVideo').srcObject = localStream;
-      } catch (e) {
-        alert('يرجى السماح بالوصول للميكروفون/الكاميرا');
-        return;
-      }
-    }
-
-    alert('تم إرسال الطلب، بانتظار موافقة الطرف الآخر...');
-    socket.emit('request-communication', { targetSocketId, type });
-  }
-
-  // استقبال طلب تواصل
-  socket.on('incoming-request', ({ fromSocketId, callerName, type }) => {
-    currentTargetSocketId = fromSocketId;
-    activeRequestData = { fromSocketId, type };
-
-    const typeNames = { chat: 'دردشة كتابية 💬', voice: 'مكالمة صوتية 🎙️', video: 'مكالمة فيديو 📹' };
-    document.getElementById('request-text').innerText = `طلب من (${callerName}): ${typeNames[type]}`;
-    document.getElementById('incoming-request-box').classList.remove('hidden');
-  });
-
-  async function acceptRequest() {
-    document.getElementById('incoming-request-box').classList.add('hidden');
-    const { fromSocketId, type } = activeRequestData;
-
-    showCommBox(type);
-
-    if (type === 'voice' || type === 'video') {
+  // --- 📹 الاتصال المباشر (WebRTC) ---
+  async function startCall(targetSocketId, type) {
+    activeOpponentId = targetSocketId;
+    try {
       localStream = await navigator.mediaDevices.getUserMedia({
         video: type === 'video',
         audio: true
       });
       document.getElementById('localVideo').srcObject = localStream;
 
-      peerConnection = createPeer(fromSocketId);
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
+      pc = createPeerConnection(targetSocketId);
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-      socket.emit('accept-request', { targetSocketId: fromSocketId, signalData: offer, type });
-    } else {
-      socket.emit('accept-request', { targetSocketId: fromSocketId, type });
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      socket.emit('call-user', { targetSocketId, offer, type });
+      showCommunicationUI('media');
+      alert('جاري الاتصال بالطرف الآخر...');
+    } catch (e) {
+      console.error('Media Error:', e);
+      if (e.name === 'NotAllowedError') {
+        alert('يرجى إعطاء إذن الكاميرا والميكروفون للموقع من القفل 🔒 بجوار الرابط ثم تحديث الصفحة!');
+      } else if (e.name === 'NotFoundError') {
+        alert('لم يتم العثور على ميكروفون أو كاميرا متصلة بجهازك!');
+      } else {
+        alert('تعذر الوصول للكاميرا أو الميكروفون: ' + e.message);
+      }
     }
   }
 
-  function rejectRequest() {
-    document.getElementById('incoming-request-box').classList.add('hidden');
-    socket.emit('reject-request', { targetSocketId: activeRequestData.fromSocketId });
-  }
-
-  socket.on('request-rejected', () => {
-    alert('تم رفض الطلب من الطرف الآخر.');
+  socket.on('incoming-call', ({ fromSocketId, callerName, offer, type }) => {
+    activeOpponentId = fromSocketId;
+    activeRequest = { type: 'call', data: { fromSocketId, offer, callType: type } };
+    document.getElementById('alert-text').innerText = `مكالمة ${type === 'video' ? 'فيديو' : 'صوتية'} واردة من: ${callerName}`;
+    document.getElementById('incoming-alert-box').classList.remove('hidden');
   });
 
-  socket.on('request-accepted', async ({ fromSocketId, signalData, type }) => {
-    showCommBox(type);
-    if (signalData && peerConnection) {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(signalData));
-    }
+  socket.on('call-accepted', async ({ answer }) => {
+    if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
   });
 
-  function showCommBox(type) {
-    document.getElementById('communication-box').classList.remove('hidden');
-    if (type === 'chat') {
-      document.getElementById('chat-section').classList.remove('hidden');
-      document.getElementById('media-section').classList.add('hidden');
-    } else {
-      document.getElementById('media-section').classList.remove('hidden');
-      document.getElementById('chat-section').classList.add('hidden');
+  socket.on('ice-candidate', async ({ candidate }) => {
+    if (pc && candidate) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+  });
+
+  socket.on('call-rejected', () => { alert('تم رفض المكالمة'); endCall(); });
+  socket.on('call-ended', () => { alert('انتهت المكالمة'); endCall(); });
+
+  function createPeerConnection(targetSocketId) {
+    const peer = new RTCPeerConnection(rtcConfig);
+    peer.onicecandidate = (e) => {
+      if (e.candidate) socket.emit('ice-candidate', { targetSocketId, candidate: e.candidate });
+    };
+    peer.ontrack = (e) => {
+      document.getElementById('remoteVideo').srcObject = e.streams[0];
+    };
+    return peer;
+  }
+
+  async function acceptIncoming() {
+    document.getElementById('incoming-alert-box').classList.add('hidden');
+    if (!activeRequest) return;
+
+    if (activeRequest.type === 'call') {
+      const { fromSocketId, offer, callType } = activeRequest.data;
+      localStream = await navigator.mediaDevices.getUserMedia({ video: callType === 'video', audio: true });
+      document.getElementById('localVideo').srcObject = localStream;
+
+      pc = createPeerConnection(fromSocketId);
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      socket.emit('make-answer', { targetSocketId: fromSocketId, answer });
+      showCommunicationUI('media');
+    } else if (activeRequest.type === 'challenge') {
+      const { fromSocketId, gameType } = activeRequest.data;
+      socket.emit('accept-game-challenge', { targetSocketId: fromSocketId, gameType });
+      switchTab('games-tab');
+      switchGameView(gameType);
+      document.getElementById('game-status').innerText = `أنت في تحدي مباشر الآن!`;
     }
   }
 
-  function closeCommunication() {
+  function rejectIncoming() {
+    document.getElementById('incoming-alert-box').classList.add('hidden');
+    if (activeRequest.type === 'call') {
+      socket.emit('reject-call', { targetSocketId: activeRequest.data.fromSocketId });
+    } else {
+      socket.emit('reject-game-challenge', { targetSocketId: activeRequest.data.fromSocketId });
+    }
+  }
+
+  function endCall() {
     if (localStream) localStream.getTracks().forEach(t => t.stop());
-    if (peerConnection) peerConnection.close();
+    if (pc) pc.close();
+    if (activeOpponentId) socket.emit('end-call', { targetSocketId: activeOpponentId });
     document.getElementById('communication-box').classList.add('hidden');
   }
 
-  function createPeer(targetSocketId) {
-    const pc = new RTCPeerConnection(rtcConfig);
-    if (localStream) {
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    }
-    pc.ontrack = (e) => {
-      document.getElementById('remoteVideo').srcObject = e.streams[0];
-    };
-    return pc;
-  }
-
-  // إرسال الرسائل
+  // --- 💬 الدردشة ---
+  function openChat(targetSocketId) { activeOpponentId = targetSocketId; showCommunicationUI('chat'); }
   function sendChatMessage() {
     const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message || !currentTargetSocketId) return;
-
-    socket.emit('send-chat-msg', { targetSocketId: currentTargetSocketId, message });
-    appendMsg(`أنت: ${message}`);
+    const msg = input.value.trim();
+    if (!msg || !activeOpponentId) return;
+    socket.emit('send-chat-msg', { targetSocketId: activeOpponentId, message: msg });
+    appendChatMsg(`أنت: ${msg}`);
     input.value = '';
   }
-
   socket.on('receive-chat-msg', ({ senderName, message }) => {
-    appendMsg(`${senderName}: ${message}`);
+    showCommunicationUI('chat');
+    appendChatMsg(`${senderName}: ${message}`);
   });
-
-  function appendMsg(text) {
+  function appendChatMsg(text) {
     const box = document.getElementById('chat-box');
     const div = document.createElement('div');
     div.className = 'chat-msg';
@@ -392,29 +385,54 @@
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
   }
-
-  // التنقل بين التبويبات
-  function switchTab(tabId, event) {
-    document.querySelectorAll('.nav-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-    if (event) event.target.classList.add('active');
-
-    document.getElementById('users-tab').classList.add('hidden');
-    document.getElementById('games-tab').classList.add('hidden');
-    document.getElementById('profile-tab').classList.add('hidden');
-
-    document.getElementById(tabId).classList.remove('hidden');
+  function showCommunicationUI(mode) {
+    document.getElementById('communication-box').classList.remove('hidden');
+    document.getElementById('chat-section').classList.toggle('hidden', mode !== 'chat');
+    document.getElementById('media-section').classList.toggle('hidden', mode !== 'media');
   }
 
-  function loadGame(game) {
-    document.getElementById('chess-view').classList.add('hidden');
-    document.getElementById('domino-view').classList.add('hidden');
-    document.getElementById('ludo-view').classList.add('hidden');
-
-    document.getElementById(`${game}-view`).classList.remove('hidden');
+  // --- ⚔️ إدارة التحديات والألعاب المباشرة ---
+  function sendChallenge(targetSocketId, gameType) {
+    activeOpponentId = targetSocketId;
+    socket.emit('send-game-challenge', { targetSocketId, gameType });
+    alert('تم إرسال دعوة التحدي إلى المنافس!');
   }
 
-  // --- ♟️ كود لعبة الشطرنج التفاعلية ---
-  const initialChessBoard = [
+  socket.on('incoming-game-challenge', ({ fromSocketId, challengerName, gameType }) => {
+    activeOpponentId = fromSocketId;
+    activeRequest = { type: 'challenge', data: { fromSocketId, gameType } };
+    document.getElementById('alert-text').innerText = `دعوة تحدي في لعبة (${gameType.toUpperCase()}) من: ${challengerName}`;
+    document.getElementById('incoming-alert-box').classList.remove('hidden');
+  });
+
+  socket.on('game-challenge-accepted', ({ gameType }) => {
+    alert('وافق الخصم على التحدي! تبدأ اللعبة الآن.');
+    switchTab('games-tab');
+    switchGameView(gameType);
+    document.getElementById('game-status').innerText = `أنت في تحدي مباشر الآن!`;
+  });
+
+  socket.on('game-challenge-rejected', () => alert('رفض الخصم التحدي.'));
+
+  // استقبال التحركات المباشرة لجميع الألعاب
+  socket.on('receive-game-move', (moveData) => {
+    if (moveData.game === 'chess') {
+      currentChessBoard = moveData.board;
+      renderChess();
+    } else if (moveData.game === 'xo') {
+      xoBoardState = moveData.board;
+      renderXO();
+    } else if (moveData.game === 'domino') {
+      dominoTableTiles = moveData.tableTiles;
+      renderDominoTable();
+    } else if (moveData.game === 'ludo') {
+      ludoState = moveData.state;
+      renderLudoTrack();
+    }
+  });
+
+  // --- ♟️ الشطرنج ---
+  let currentChessBoard = [
     ['♜','♞','♝','♛','♚','♝','♞','♜'],
     ['♟','♟','♟','♟','♟','♟','♟','♟'],
     ['','','','','','','',''],
@@ -424,46 +442,178 @@
     ['♙','♙','♙','♙','♙','♙','♙','♙'],
     ['♖','♘','♗','♕','♔','♗','♘','♖']
   ];
-  let currentChessState = [];
-  let selectedSquare = null;
-
-  function initChess() {
-    currentChessState = JSON.parse(JSON.stringify(initialChessBoard));
-    renderChessBoard();
-  }
-
-  function renderChessBoard() {
-    const boardEl = document.getElementById('chess-board');
-    if (!boardEl) return;
-    boardEl.innerHTML = '';
+  let chessSelected = null;
+  function initChess() { renderChess(); }
+  function renderChess() {
+    const el = document.getElementById('chess-board');
+    el.innerHTML = '';
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
         const sq = document.createElement('div');
-        const isWhite = (r + c) % 2 === 0;
-        sq.className = `chess-sq ${isWhite ? 'white' : 'black'}`;
-        sq.innerText = currentChessState[r][c];
-        
-        if (selectedSquare && selectedSquare.r === r && selectedSquare.c === c) {
-          sq.classList.add('selected');
-        }
-
+        sq.className = `chess-sq ${(r + c) % 2 === 0 ? 'white' : 'black'}`;
+        sq.innerText = currentChessBoard[r][c];
+        if (chessSelected && chessSelected.r === r && chessSelected.c === c) sq.classList.add('selected');
         sq.onclick = () => handleChessClick(r, c);
-        boardEl.appendChild(sq);
+        el.appendChild(sq);
       }
     }
   }
-
   function handleChessClick(r, c) {
-    if (selectedSquare) {
-      currentChessState[r][c] = currentChessState[selectedSquare.r][selectedSquare.c];
-      currentChessState[selectedSquare.r][selectedSquare.c] = '';
-      selectedSquare = null;
-    } else {
-      if (currentChessState[r][c] !== '') {
-        selectedSquare = { r, c };
+    if (chessSelected) {
+      currentChessBoard[r][c] = currentChessBoard[chessSelected.r][chessSelected.c];
+      currentChessBoard[chessSelected.r][chessSelected.c] = '';
+      chessSelected = null;
+      renderChess();
+      if (activeOpponentId) {
+        socket.emit('game-move', { targetSocketId: activeOpponentId, moveData: { game: 'chess', board: currentChessBoard } });
       }
+    } else if (currentChessBoard[r][c] !== '') {
+      chessSelected = { r, c };
+      renderChess();
     }
-    renderChessBoard();
+  }
+
+  // --- ❌⭕ لعبة XO ---
+  let xoBoardState = ['', '', '', '', '', '', '', '', ''];
+  let currentXOTurn = 'X';
+  function initXO() { renderXO(); }
+  function renderXO() {
+    const el = document.getElementById('xo-board');
+    el.innerHTML = '';
+    xoBoardState.forEach((val, idx) => {
+      const sq = document.createElement('div');
+      sq.className = 'xo-sq';
+      sq.innerText = val;
+      sq.onclick = () => handleXOClick(idx);
+      el.appendChild(sq);
+    });
+  }
+  function handleXOClick(idx) {
+    if (xoBoardState[idx] !== '') return;
+    xoBoardState[idx] = currentXOTurn;
+    currentXOTurn = currentXOTurn === 'X' ? 'O' : 'X';
+    renderXO();
+    if (activeOpponentId) {
+      socket.emit('game-move', { targetSocketId: activeOpponentId, moveData: { game: 'xo', board: xoBoardState } });
+    }
+  }
+
+  // --- 🀄 لعبة الدومينو التفاعلية ---
+  let dominoTableTiles = [];
+  let dominoPlayerHand = [
+    { top: 6, bottom: 6 },
+    { top: 6, bottom: 5 },
+    { top: 5, bottom: 4 },
+    { top: 4, bottom: 3 },
+    { top: 3, bottom: 2 },
+    { top: 2, bottom: 1 },
+    { top: 1, bottom: 0 }
+  ];
+
+  function initDomino() {
+    renderDominoTable();
+    renderDominoHand();
+  }
+
+  function renderDominoTable() {
+    const tableEl = document.getElementById('domino-table');
+    tableEl.innerHTML = '';
+    if (dominoTableTiles.length === 0) {
+      tableEl.innerHTML = '<span style="color:#64748b;">الطاولة فارغة حالياً.. اضغط على قطعة من يدك لإسقاطها!</span>';
+      return;
+    }
+    dominoTableTiles.forEach(tile => {
+      tableEl.appendChild(createDominoTileElement(tile, false));
+    });
+  }
+
+  function renderDominoHand() {
+    const handEl = document.getElementById('domino-hand');
+    handEl.innerHTML = '';
+    dominoPlayerHand.forEach((tile, index) => {
+      const tileEl = createDominoTileElement(tile, true);
+      tileEl.onclick = () => playDominoTile(index);
+      handEl.appendChild(tileEl);
+    });
+  }
+
+  function createDominoTileElement(tile, isHand) {
+    const div = document.createElement('div');
+    div.className = 'domino-tile';
+    div.innerHTML = `
+      <div>${tile.top}</div>
+      <div class="domino-tile-divider"></div>
+      <div>${tile.bottom}</div>
+    `;
+    return div;
+  }
+
+  function playDominoTile(index) {
+    const playedTile = dominoPlayerHand.splice(index, 1)[0];
+    dominoTableTiles.push(playedTile);
+    renderDominoTable();
+    renderDominoHand();
+
+    if (activeOpponentId) {
+      socket.emit('game-move', {
+        targetSocketId: activeOpponentId,
+        moveData: { game: 'domino', tableTiles: dominoTableTiles }
+      });
+    }
+  }
+
+  // --- 🎲 لعبة اللودو التفاعلية ---
+  let ludoState = {
+    p1Pos: 0,
+    p2Pos: 0,
+    lastDice: 0
+  };
+
+  function initLudo() { renderLudoTrack(); }
+
+  function renderLudoTrack() {
+    const trackEl = document.getElementById('ludo-track');
+    trackEl.innerHTML = '';
+    document.getElementById('ludo-dice-result').innerText = ludoState.lastDice > 0 ? ludoState.lastDice : '-';
+
+    for (let i = 0; i < 16; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'ludo-cell';
+
+      let tokens = '';
+      if (ludoState.p1Pos === i) tokens += '🔴';
+      if (ludoState.p2Pos === i) tokens += '🔵';
+
+      cell.innerHTML = tokens || `<span style="font-size:10px; color:#475569;">${i + 1}</span>`;
+      trackEl.appendChild(cell);
+    }
+  }
+
+  function rollLudoDice() {
+    const dice = Math.floor(Math.random() * 6) + 1;
+    ludoState.lastDice = dice;
+    ludoState.p1Pos = (ludoState.p1Pos + dice) % 16;
+    renderLudoTrack();
+
+    if (activeOpponentId) {
+      socket.emit('game-move', {
+        targetSocketId: activeOpponentId,
+        moveData: { game: 'ludo', state: ludoState }
+      });
+    }
+  }
+
+  // --- 🔄 التبديل بين الشاشات ---
+  function switchGameView(game) {
+    document.querySelectorAll('.game-view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(`${game}-view`).classList.remove('hidden');
+  }
+
+  function switchTab(tabId, event) {
+    document.querySelectorAll('.nav-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+    if (event) event.target.classList.add('active');
+    ['users-tab', 'games-tab', 'profile-tab'].forEach(t => document.getElementById(t).classList.add('hidden'));
+    document.getElementById(tabId).classList.remove('hidden');
   }
 </script>
 </body>
